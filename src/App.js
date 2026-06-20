@@ -65,41 +65,60 @@ export default function MeetingGhostDashboard() {
     setTranscript(SAMPLE_TRANSCRIPT);
   };
 
-  const startAnalysis = () => {
+const startAnalysis = () => {
     if (!transcript.trim()) return;
     setIsRunning(true);
     setIsDone(false);
     setLines([]);
     setExtractions([]);
-    setCurrentLine(0);
     setActiveTab("live");
 
-    const transcriptLines = transcript.split("\n").filter(l => l.trim());
-    let lineIdx = 0;
-    let extractionIdx = 0;
+    fetch("http://localhost:8000/analyse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ transcript, meeting_title: "Live meeting" }),
+    }).then(response => {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-    intervalRef.current = setInterval(() => {
-      if (lineIdx < transcriptLines.length) {
-        const line = transcriptLines[lineIdx];
-        setLines(prev => [...prev, line]);
-        lineIdx++;
+      function read() {
+        reader.read().then(({ done, value }) => {
+          if (done) {
+            setIsRunning(false);
+            setIsDone(true);
+            return;
+          }
+          buffer += decoder.decode(value, { stream: true });
+          const events = buffer.split("\n\n");
+          buffer = events.pop();
 
-        const matchingExtraction = MOCK_EXTRACTIONS.find(e => {
-          const timeMatch = line.match(/\[(\d+:\d+)\]/);
-          return timeMatch && e.time === timeMatch[1];
+          events.forEach(eventBlock => {
+            const eventMatch = eventBlock.match(/event: (.+)/);
+            const dataMatch = eventBlock.match(/data: (.+)/);
+            if (!eventMatch || !dataMatch) return;
+
+            const eventType = eventMatch[1];
+            const data = JSON.parse(dataMatch[1]);
+
+            if (eventType === "line") {
+              setLines(prev => [...prev, data.text]);
+            } else if (eventType === "extraction") {
+              setExtractions(prev => [...prev, { id: prev.length + 1, ...data }]);
+            } else if (eventType === "done") {
+              setIsRunning(false);
+              setIsDone(true);
+            }
+          });
+
+          read();
         });
-
-        if (matchingExtraction) {
-          setTimeout(() => {
-            setExtractions(prev => [...prev, matchingExtraction]);
-          }, 600);
-        }
-      } else {
-        clearInterval(intervalRef.current);
-        setIsRunning(false);
-        setIsDone(true);
       }
-    }, 400);
+      read();
+    }).catch(err => {
+      console.error("Failed to connect to backend:", err);
+      setIsRunning(false);
+    });
   };
 
   const reset = () => {
