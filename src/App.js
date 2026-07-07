@@ -73,7 +73,7 @@ const startAnalysis = () => {
     setExtractions([]);
     setActiveTab("live");
 
-    fetch("http://localhost:8000/analyse", {
+    fetch(`${process.env.REACT_APP_API_URL || "http://localhost:8000"}/analyse`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ transcript, meeting_title: "Live meeting" }),
