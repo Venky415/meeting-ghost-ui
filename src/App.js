@@ -21,14 +21,6 @@ const SAMPLE_TRANSCRIPT = `[00:00] Priya: Okay let's get started, thanks everyon
 [03:05] Sneha: Got it, no problem.
 [03:10] Priya: Great, thanks everyone, talk soon.`;
 
-const MOCK_EXTRACTIONS = [
-  { id: 1, type: "decision", summary: "Go with option B — $499 flat enterprise pricing tier", confidence: "high", owner: null, deadline: null, time: "00:35" },
-  { id: 2, type: "action_item", summary: "Send updated pricing sheet to finance", confidence: "high", owner: "Rahul", deadline: "Friday", time: "00:50" },
-  { id: 3, type: "question", summary: "How much effort is the legacy webhook client migration?", confidence: "low", owner: "Sneha", deadline: null, time: "01:42" },
-  { id: 4, type: "action_item", summary: "Investigate legacy webhook migration effort and report back", confidence: "high", owner: "Sneha", deadline: "this week", time: "01:50" },
-  { id: 5, type: "question", summary: "Should v1 API be sunset entirely or kept for enterprise clients? — deferred, needs legal input", confidence: "medium", owner: null, deadline: null, time: "02:22" },
-  { id: 6, type: "decision", summary: "Sneha is point of contact for urgent pricing matters while Priya is out Monday", confidence: "high", owner: "Sneha", deadline: "next Monday", time: "02:52" },
-];
 
 const COLORS = {
   action_item: { bg: "#0F2A1A", border: "#1D9E75", text: "#5DCAA5", label: "Action" },
@@ -48,7 +40,6 @@ export default function MeetingGhostDashboard() {
   const [extractions, setExtractions] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
   const [isDone, setIsDone] = useState(false);
-  const [currentLine, setCurrentLine] = useState(0);
   const [activeTab, setActiveTab] = useState("live");
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
